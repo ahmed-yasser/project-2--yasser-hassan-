@@ -1,0 +1,520 @@
+$(window).resize(resize)
+  window.onorientationchange = resize;
+
+	document.addEventListener('DOMContentLoaded', start, false);
+
+	var w = 0.5;
+	var h = 0.5;
+
+	var n = 7;
+	var d = 1;
+	var current = 1;
+	var objs = 10;
+	var vx = 0;
+	var vy = 0;
+	var vz = 0;
+	var points1 = [];
+	var points2 = [];
+	var points3 = [];
+	var tpoint1 = [];
+	var tpoint2 = [];
+	var tpoint3 = [];
+	var balls = [];
+
+	// create an new instance of a pixi stage
+	var stage = new PIXI.Stage(0x97c56e, true);
+	
+	// create a renderer instance
+	var renderer = PIXI.autoDetectRenderer(600, window.innerHeight, null);
+	
+	
+	document.body.appendChild(renderer.view);
+	renderer.view.style.position = "absolute";
+	renderer.view.style.top = "0px";
+	renderer.view.style.left = "320px";
+	requestAnimFrame( animate );
+	
+	var audio = document.getElementById("demo");
+	
+	
+	function start() {
+
+		var ballTexture = new PIXI.Texture.fromImage("assets/alien.png");
+
+		makeObject(0);
+
+		for (var i = 0; i < n; i++)
+		{
+			tpoint1[i] = points1[i];
+			tpoint2[i] = points2[i];
+			tpoint3[i] = points3[i];
+
+			var tempBall = new PIXI.Sprite(ballTexture);
+			tempBall.anchor.x = 0.5;
+			tempBall.anchor.y = 0.5;
+			tempBall.alpha = 0.5;
+			tempBall.scale.x = tempBall.scale.y = 1.5;
+			balls[i] = tempBall;
+
+			stage.addChild(tempBall);
+		}
+
+		resize();
+
+		setTimeout(nextObject, 500);
+
+		requestAnimFrame(update);
+
+	}
+	
+	//buttons
+	var playButton = PIXI.Texture.fromImage("play.png");
+	var muteButton = PIXI.Texture.fromImage("MuteButton.png");
+
+
+	
+	var buttonsCom = [];
+	buttonsCom.push(playButton);
+	buttonsCom.push(muteButton);
+
+	var buttons = [];
+
+	var windowHeight = window.innerHeight;
+
+	var buttonPositions = [600 - 100,windowHeight-50,
+	600-50, windowHeight-50];
+
+
+	//background movement
+	var texture = PIXI.Texture.fromImage("Blue-Sky-1024x1024.jpg");
+	var tilingSprite = new PIXI.TilingSprite(texture, 600, window.innerHeight)
+	
+	var count = 0;
+	
+	stage.addChild(tilingSprite);
+	
+	
+	//create bullets
+	//var bullet =  PIXI.Texture.fromImage("explosion.png" , 10);
+	
+	// create a texture from an image path
+	var texture = PIXI.Texture.fromImage("plane.png");
+	
+	
+	
+	for (var i=0; i < 1; i++) 
+	{
+		createPlane(0.5 * 600, 0.5 * window.innerHeight)
+	};
+	
+	
+	function createPlane(x, y)
+	{
+		//var explosionBullets = new PIXI.Sprite(bullet);
+		
+		//explosionBullets.anchor.x = 0.5;
+		//explosionBullets.anchor.y = 0.5;
+	
+		// create our little plane friend..
+		var plane = new PIXI.Sprite(texture);
+		//	plane.width = 300;
+		// enable the plane to be interactive.. this will allow it to respond to mouse and touch events		
+		plane.setInteractive(true);
+		// this button mode will mean the hand cursor appears when you rollover the plane with your mouse
+		plane.buttonMode = true;
+		
+		// center the plane anchor point
+		plane.anchor.x = 0.5;
+		plane.anchor.y = 0.5;
+		// make it a bit bigger, so its easier to touch
+		plane.scale.x = plane.scale.y = 1.5;
+		
+		
+		// use the mousedown and touchstart
+		plane.mousedown = plane.touchstart = function(data)
+		{
+			// store a refference to the data
+			// The reason for this is because of multitouch
+			// we want to track the movement of this particular touch
+			this.data = data;
+			this.alpha = 0.9;
+			this.dragging = true;
+		};
+		
+		// set the events for when the mouse is released or a touch is released
+		plane.mouseup = plane.mouseupoutside = plane.touchend = plane.touchendoutside = function(data)
+		{
+			this.alpha = 1
+			this.dragging = false;
+			// set the interaction data to null
+			this.data = null;
+		};
+		
+		// set the callbacks for when the mouse or a touch moves
+		plane.mousemove = plane.touchmove = function(data)
+		{
+			/*if(this.dragging)
+			{
+				// need to get parent coords..
+				var newPosition = this.data.getLocalPosition(this.parent);
+				this.position.x = newPosition.x;
+				this.position.y = newPosition.y;
+			}*/
+			
+			// this line will get the mouse coords relative to the sprites parent..
+			var localCoordsPosition = data.getLocalPosition(plane);
+			var parentCoordsPosition = data.getLocalPosition(plane.parent);
+ 
+			this.position.x = parentCoordsPosition.x;
+			this.position.y = parentCoordsPosition.y;
+			
+		}
+		
+
+		plane.click = function(data){
+		
+			//setTimeout();
+			//stage.addChild(explosionBullets);
+			alert("FIRE");
+		}
+		
+		// move the sprite to its designated position
+		plane.position.x = x;
+		plane.position.y = 400;
+	
+		
+		// add it to the stage
+		stage.addChild(plane);
+		
+	}
+	
+	
+	
+	function animate() {
+	
+	    requestAnimFrame( animate );
+		
+		count += 0.005
+		//tilingSprite.tileScale.x = 2 + Math.sin(count);
+		//tilingSprite.tileScale.y = 2 + Math.cos(count);
+		
+		//tilingSprite.tilePosition.x += 1;
+		tilingSprite.tilePosition.y += 2;
+		
+
+	    renderer.render(stage);
+	}
+	
+
+	/**************Create Buttons and add them to Stage in a Certain Position******************/
+	for (var i=0; i < 2; i++) 
+	{
+	var button = new PIXI.Sprite(buttonsCom[i]);
+	button.buttonMode = true;
+
+	button.anchor.x = 0.5;
+	button.anchor.y = 0.5;
+
+	button.position.x = buttonPositions[i*2];
+	button.position.y = buttonPositions[i*2 + 1];
+
+	// make the button interactive..	
+	button.setInteractive(true);
+
+	// add it to the stage
+	stage.addChild(button);
+
+	// add button to array
+	buttons.push(button);
+
+	}
+
+
+	/************Add Button Listeners *****************/
+	buttons[0].click = function(data){
+	// click!
+	console.log("CLICK Play!");
+	audio.play();
+
+	};
+
+	buttons[1].click = function(data){
+	// click!
+	console.log("CLICK Mute!");
+	audio.pause();
+
+	};
+		
+
+	function nextObject () {
+
+		current++;
+
+		if (current > objs)
+		{
+			current = 0;
+		}
+
+		makeObject(current);
+
+		setTimeout(nextObject, 800);
+
+	}
+
+	function makeObject ( t ) {
+
+		var xd;
+
+		switch (t)
+		{
+			case 0:
+
+				for (var i = 0; i < n; i++)
+				{
+					points1[i] = -50 + Math.round(Math.random() * 100);
+					points2[i] = 0;
+					points3[i] = 0;
+				}
+				break;
+
+			case 1:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(xd) * 10) * (Math.cos(t * 360 / n) * 10);
+					points2[i] = (Math.cos(xd) * 10) * (Math.sin(t * 360 / n) * 10);
+					points3[i] = Math.sin(xd) * 100;
+				}
+				break;
+
+			case 2:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(xd) * 10) * (Math.cos(t * 360 / n) * 10);
+					points2[i] = (Math.cos(xd) * 10) * (Math.sin(t * 360 / n) * 10);
+					points3[i] = Math.sin(i * 360 / n) * 100;
+				}
+				break;
+
+			case 3:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(xd) * 10) * (Math.cos(xd) * 10);
+					points2[i] = (Math.cos(xd) * 10) * (Math.sin(xd) * 10);
+					points3[i] = Math.sin(xd) * 100;
+				}
+				break;
+
+			case 4:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(xd) * 10) * (Math.cos(xd) * 10);
+					points2[i] = (Math.cos(xd) * 10) * (Math.sin(xd) * 10);
+					points3[i] = Math.sin(i * 360 / n) * 100;
+				}
+				break;
+
+			case 5:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(xd) * 10) * (Math.cos(xd) * 10);
+					points2[i] = (Math.cos(i * 360 / n) * 10) * (Math.sin(xd) * 10);
+					points3[i] = Math.sin(i * 360 / n) * 100;
+				}
+				break;
+
+			case 6:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(i * 360 / n) * 10) * (Math.cos(i * 360 / n) * 10);
+					points2[i] = (Math.cos(i * 360 / n) * 10) * (Math.sin(xd) * 10);
+					points3[i] = Math.sin(i * 360 / n) * 100;
+				}
+				break;
+
+			case 7:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(i * 360 / n) * 10) * (Math.cos(i * 360 / n) * 10);
+					points2[i] = (Math.cos(i * 360 / n) * 10) * (Math.sin(i * 360 / n) * 10);
+					points3[i] = Math.sin(i * 360 / n) * 100;
+				}
+				break;
+
+			case 8:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(xd) * 10) * (Math.cos(i * 360 / n) * 10);
+					points2[i] = (Math.cos(i * 360 / n) * 10) * (Math.sin(i * 360 / n) * 10);
+					points3[i] = Math.sin(xd) * 100;
+				}
+				break;
+
+			case 9:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(xd) * 10) * (Math.cos(i * 360 / n) * 10);
+					points2[i] = (Math.cos(i * 360 / n) * 10) * (Math.sin(xd) * 10);
+					points3[i] = Math.sin(xd) * 100;
+				}
+				break;
+
+			case 10:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(i * 360 / n) * 10) * (Math.cos(i * 360 / n) * 10);
+					points2[i] = (Math.cos(xd) * 10) * (Math.sin(xd) * 10);
+					points3[i] = Math.sin(i * 360 / n) * 100;
+				}
+				break;
+
+			case 11:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(xd) * 10) * (Math.cos(i * 360 / n) * 10);
+					points2[i] = (Math.sin(xd) * 10) * (Math.sin(i * 360 / n) * 10);
+					points3[i] = Math.sin(xd) * 100;
+				}
+				break;
+
+			case 12:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(xd) * 10) * (Math.cos(xd) * 10);
+					points2[i] = (Math.sin(xd) * 10) * (Math.sin(xd) * 10);
+					points3[i] = Math.sin(i * 360 / n) * 100;
+				}
+				break;
+
+			case 13:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(xd) * 10) * (Math.cos(i * 360 / n) * 10);
+					points2[i] = (Math.sin(i * 360 / n) * 10) * (Math.sin(xd) * 10);
+					points3[i] = Math.sin(i * 360 / n) * 100;
+				}
+				break;
+
+			case 14:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.sin(xd) * 10) * (Math.cos(xd) * 10);
+					points2[i] = (Math.sin(xd) * 10) * (Math.sin(i * 360 / n) * 10);
+					points3[i] = Math.sin(i * 360 / n) * 100;
+				}
+				break;
+
+			case 15:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(i * 360 / n) * 10) * (Math.cos(i * 360 / n) * 10);
+					points2[i] = (Math.sin(i * 360 / n) * 10) * (Math.sin(xd) * 10);
+					points3[i] = Math.sin(i * 360 / n) * 100;
+				}
+				break;
+
+			case 16:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(xd) * 10) * (Math.cos(i * 360 / n) * 10);
+					points2[i] = (Math.sin(i * 360 / n) * 10) * (Math.sin(xd) * 10);
+					points3[i] = Math.sin(xd) * 100;
+				}
+				break;
+
+			case 17:
+
+				for (var i = 0; i < n; i++)
+				{
+					xd = -90 + Math.round(Math.random() * 180);
+					points1[i] = (Math.cos(xd) * 10) * (Math.cos(xd) * 10);
+					points2[i] = (Math.cos(i * 360 / n) * 10) * (Math.sin(i * 360 / n) * 10);
+					points3[i] = Math.sin(i * 360 / n) * 100;
+				}
+				break;
+		}
+
+	}
+
+	function resize()
+	{
+		w = 600 - 16;
+		h = 300;
+	
+		//renderer.resize(w, h);
+	}
+
+	function update()
+	{
+		var x3d, y3d, z3d, tx, ty, tz, ox;
+
+		if (d < 250)
+		{
+			d++;
+		}
+
+		vx += 0.0075;
+		vy += 0.0075;
+		vz += 0.0075;
+
+		for (var i = 0; i < n; i++)
+		{
+			if (points1[i] > tpoint1[i]) { tpoint1[i] = tpoint1[i] + 1; }
+			if (points1[i] < tpoint1[i]) { tpoint1[i] = tpoint1[i] - 1; }
+			if (points2[i] > tpoint2[i]) { tpoint2[i] = tpoint2[i] + 1; }
+			if (points2[i] < tpoint2[i]) { tpoint2[i] = tpoint2[i] - 1; }
+			if (points3[i] > tpoint3[i]) { tpoint3[i] = tpoint3[i] + 1; }
+			if (points3[i] < tpoint3[i]) { tpoint3[i] = tpoint3[i] - 1; }
+
+			x3d = tpoint1[i];
+			y3d = tpoint2[i];
+			z3d = tpoint3[i];
+
+			ty = (y3d * Math.cos(vx)) - (z3d * Math.sin(vx));
+			tz = (y3d * Math.sin(vx)) + (z3d * Math.cos(vx));
+			tx = (x3d * Math.cos(vy)) - (tz * Math.sin(vy));
+			tz = (x3d * Math.sin(vy)) + (tz * Math.cos(vy));
+			ox = tx;
+			tx = (tx * Math.cos(vz)) - (ty * Math.sin(vz));
+			ty = (ox * Math.sin(vz)) + (ty * Math.cos(vz));
+
+			balls[i].position.x = (512 * tx) / (d - tz) + w / 2;
+			balls[i].position.y = (h/2) - (512 * ty) / (d - tz);
+
+		}
+
+		renderer.render(stage);
+
+		requestAnimFrame(update);
+	}
